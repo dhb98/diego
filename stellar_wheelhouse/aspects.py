@@ -233,12 +233,16 @@ def moon_angle_aspect(chart: Chart) -> Factor | None:
 
 def planet_cusp_aspects(chart: Chart) -> list[Factor]:
     factors = []
+    # The Moon itself is excluded: its angle behaviour is the dedicated
+    # whole-game Moon-Angle rule above, and the book never demonstrates a
+    # Moon-on-minor-cusp case. Its ANTISCIA (aMoon) has no such special
+    # rule and is an ordinary point -- antiscia "operate exactly like we
+    # already learned from planets ... for antiscia planets to be near
+    # angles, and for antiscia planets to cast aspects" (p.75) -- so it
+    # stays in.
     bodies = [b for b in CHART_BODIES if b != "Moon"] + [
-        "a" + b for b in CHART_BODIES if b != "Moon"
+        "a" + b for b in CHART_BODIES
     ]
-    # Moon is excluded here: its angle-cusp behavior is handled by the
-    # dedicated Moon-Angle rule above, and the book never demonstrates a
-    # Moon-on-minor-cusp case.
     for body in bodies:
         lon = chart.lon(body)
         if lon is None:
@@ -354,8 +358,11 @@ AXES = {
 
 def planet_axis_aspects(chart: Chart) -> list[Factor]:
     factors = []
+    # Neptune and aNeptune are both handled by neptune_angle_aspects
+    # (status-independent rule). The Moon has its own whole-game angle
+    # rule, but aMoon is an ordinary antiscia point and belongs here.
     bodies = [b for b in CHART_BODIES if b not in ("Moon", "Neptune")] + [
-        "a" + b for b in CHART_BODIES if b not in ("Moon", "Neptune")
+        "a" + b for b in CHART_BODIES if b != "Neptune"
     ]
     extra_axes = {}
     ax = chart.extra_angles.get("AX")
