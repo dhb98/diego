@@ -1,0 +1,90 @@
+San Jose de Oruro fav vs Universitario de Vinto dog
+Date: Jul 27 2026 (Monday)
+Time: 3:00 PM (UTC-4)
+Location: Oruro, BOLIVIA 17.972°S, 67.093°W
+
+Favorite = Jupiter, Ceres, Saturn, Eris, Mars
+Underdog = Mercury, Neptune, Moon, Pluto, Venus
+
+Planet Aspects:
+Nep Rx Sextile Plu Rx 0°02' separating
+Sun Sextile Ura 0°06'
+Sun Trine Nep Rx 0°28' separating
+Sun Opposite Plu Rx 0°30' separating
+Ura Sextile Nep Rx 0°34' separating
+Ven Square Mars 0°34'
+Ura Trine Plu Rx 0°36' separating
+════════════════════════════════════
+Moon to Planets within 5 degrees:
+Moon Square L2 Sat Rx S in 0°12'
+Moon Trine L2 aSat in 0°42'
+Moon Opposite L7 Merc in 2°29' Can in 7th house
+Capulus-Algol Alert: aJup, aSun
+Degree Alert: 29 NN Rx, 29 SN
+Planets to Angles:
+ASC L5 Mars Conjunct DSC in 1°52'
+L10 Ceres Conjunct DSC in 1°57' separating
+AX L12 Plu Rx Square AX in 1°30'
+════════════════════════════════════
+ASC: 22°04′ Sag
+MC: 11°59′ Vir
+AX: 02°46′ Sco
+
+Planet Positions:
+POF: 01°51' Gem (61.86)
+aPOF: 28°08' Can (118.14)
+Moon: 14°32' Cap (284.55)
+aMoon: 15°27' Sag (255.45)
+Sun: 04°45' Leo (124.77)
+aSun: 25°14' Tau (55.23)
+Merc: 17°02' Can (107.03)
+aMerc: 12°57' Gem (72.97)
+Ven: 19°39' Vir (169.65)
+aVen: 10°20' Ari (10.35)
+Mars: 20°12' Gem (80.21)
+aMars: 09°47' Can (99.79)
+Jup: 06°01' Leo (126.03)
+aJup: 23°58' Tau (53.97)
+Sat Rx S: 14°44' Ari (14.75)
+aSat: 15°15' Vir (165.25)
+Ura: 04°51' Gem (64.87)
+aUra: 25°08' Can (115.13)
+Nep Rx: 04°18' Ari (4.31)
+aNep: 25°41' Vir (175.69)
+Plu Rx: 04°16' Aqu (304.27)
+aPlu: 25°43' Sco (235.73)
+NN Rx: 29°56' Aqu (329.95)
+aNN: 00°03' Sco (210.05)
+Eris Rx: 25°57' Ari (25.96)
+aEris: 04°02' Vir (154.04)
+Ceres: 24°01' Gem (84.02)
+aCeres: 05°58' Can (95.98)
+
+House 1: 22°04' Sag (262.07), Jupiter
+House 2: 17°03' Cap (287.06), Saturn
+House 3: 12°48' Aqu (312.81), Uranus
+House 4: 11°59' Pis (341.98), Neptune
+House 5: 15°14' Ari (15.24), Mars
+House 6: 19°47' Tau (49.78), Eris
+House 7: 22°04' Gem (82.07), Mercury
+House 8: 17°03' Can (107.06), Moon
+House 9: 12°48' Leo (132.81), Sun
+House 10: 11°59' Vir (161.98), Ceres
+House 11: 15°14' Lib (195.24), Venus
+House 12: 19°47' Sco (229.78), Pluto
+
+Right Ascension:
+RA of EQD: 73°22'
+RA of Moon: 286°14'
+RA of Sun: 127°06'
+RA of Merc: 108°02'
+RA of Ven: 170°37'
+RA of Mars: 79°21'
+RA of Jup: 128°31'
+RA of Sat Rx S: 14°32'
+RA of Ura: 62°56'
+RA of Nep Rx: 04°30'
+RA of Plu Rx: 307°42'
+RA of NN Rx: 332°02'
+RA of Eris Rx: 27°51'
+RA of Ceres: 83°34'
