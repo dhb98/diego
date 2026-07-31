@@ -77,9 +77,14 @@ def render(result: AnalysisResult) -> str:
     lines.append("=" * 72)
     lines.append("KEY-LORD READ  (Moon aspects to L1 / L7 only)")
     lines.append("=" * 72)
-    if k.is_silent:
+    if k.lean == "silent":
         lines.append("SILENT -- neither main planet (L1 for the favourite, L7 for the")
         lines.append("underdog) takes a Moon aspect. Under this read: PASS.")
+    elif k.lean == "tied":
+        for f in sorted(k.factors, key=lambda f: -f.weight):
+            lines.append(f"  [{f.team:>3}] w={f.weight:<5.2f} {f.description}")
+        lines.append(f"TIED -- both main planets take a Moon aspect and they cancel "
+                     f"exactly ({k.fav_score:.2f} each). Under this read: PASS.")
     else:
         for f in sorted(k.factors, key=lambda f: -f.weight):
             lines.append(f"  [{f.team:>3}] w={f.weight:<5.2f} {f.description}")

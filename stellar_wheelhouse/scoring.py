@@ -57,14 +57,17 @@ class KeyLordRead:
     Do not treat this as a proven edge; it is a pre-registered hypothesis
     awaiting an out-of-sample test on 30-50 unseen charts.
     """
-    lean: str                 # FAV, DOG, or "silent"
+    lean: str                 # FAV, DOG, "silent" (no key-lord aspect) or "tied"
     fav_score: float
     dog_score: float
     factors: list[Factor]
 
     @property
     def is_silent(self) -> bool:
-        return self.lean == "silent"
+        """No call. Either main planet never took a Moon aspect, or both
+        did and they cancel exactly -- very different situations that
+        must not be reported with the same sentence."""
+        return self.lean in ("silent", "tied")
 
 
 def key_lord_read(factors: list[Factor]) -> KeyLordRead:
@@ -72,8 +75,10 @@ def key_lord_read(factors: list[Factor]) -> KeyLordRead:
           if f.is_key_lord and not f.low_confidence and f.category == "Moon-Planet"]
     fav = sum(f.weight for f in kf if f.team == FAV)
     dog = sum(f.weight for f in kf if f.team == DOG)
-    if not kf or abs(fav - dog) < 1e-9:
+    if not kf:
         return KeyLordRead("silent", fav, dog, kf)
+    if abs(fav - dog) < 1e-9:
+        return KeyLordRead("tied", fav, dog, kf)
     return KeyLordRead(FAV if fav > dog else DOG, fav, dog, kf)
 
 
