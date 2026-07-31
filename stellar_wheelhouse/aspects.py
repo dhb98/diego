@@ -355,7 +355,15 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
             continue
         base_name = body[1:] if body.startswith("a") else body
         team = chart.team_of(base_name)
-        if team is None:
+        has_special = base_name in SPECIAL_AXIS_RULES
+        # A planet that rules only house 3 and/or 9 has no side, because
+        # L3/L9 are dropped from the method entirely (p.16). Such a planet
+        # still counts when it carries one of the absolute fav/dog angle
+        # biases -- "Mars trine Asc-Dsc = fav" holds whatever Lord Mars
+        # happens to be, the "(unless L7)" clause being the only carve-out
+        # -- but a planet falling through to the generic own-team baseline
+        # has no team to score for and drops out.
+        if team is None and not has_special:
             continue
         status = body_status(chart, body)
         retro = chart.is_rx(base_name)
@@ -376,6 +384,8 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                     unless_lord is not None and unless_lord in chart.lord_numbers(base_name)
                 ) else baseline
             else:
+                if team is None:
+                    continue
                 result_team = team
             effect_team = _flip_if_reverse(result_team, status)
             factors.append(Factor(
@@ -390,6 +400,8 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
         # Ax-Vx and (RA-based) EQD-EQA: no team-anchored named points, so
         # conjunction also uses the generic own-team/opposite-team baseline.
         for axis_name, p1 in extra_axes.items():
+            if team is None:
+                break  # no absolute rule covers Ax-Vx; nothing to score for
             rel = axis_relationship(lon, retro, p1, ANGLE_ORB)
             if not rel:
                 continue
@@ -405,7 +417,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                 low_confidence=_is_cyclic(chart, body),
             ))
 
-        if eqd is not None:
+        if eqd is not None and team is not None:
             ra_val = chart.ra.get(base_name)
             if ra_val is not None:
                 rel = axis_relationship(ra_val, retro, eqd, ANGLE_ORB)
