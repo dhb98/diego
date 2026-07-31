@@ -14,7 +14,16 @@ Core rule, stated precisely on p.42-43:
     - A planet standing in a NEUTRAL sign (neither its own nor its
       detriment) takes on the FULL status of that sign's ruler,
       recursively (the Mars-in-Gemini -> Mercury -> Sun chain example,
-      p.38, and confirmed by practice examples 1/2/4/5/7 on p.43).
+      p.38, and confirmed by practice examples 1/2/4/5/7 on p.43) --
+      EXCEPT when that dispositor is itself standing in the first
+      planet's own sign (mutual reception), in which case both are
+      treated as NORMAL. This exception is not in the excerpt; it's
+      standard traditional-astrology practice (see the p.5 credit to
+      John Frawley) added here because Eris/Ceres each rule exactly one
+      sign, which makes a permanent two-planet reception loop physically
+      possible (e.g. Mars transiting Taurus while Eris sits in Aries,
+      which it does for decades at a stretch) in a way the old two-
+      sign-per-planet rulership table never allowed.
 
     A dispositor's own Rx/29th-degree state does NOT propagate down the
     chain -- only its sign placement does (p.48-49); Rx/29th-degree are
@@ -97,6 +106,19 @@ def _status_for_placement(chart: Chart, planet: str, sign: str, _visited: frozen
     if disp_lon is None:
         return NORMAL, False
     disp_sign, _ = _sign_and_deg(disp_lon)
+
+    # Mutual reception (not stated in the excerpt, but standard practice
+    # in the traditional astrology this method is built on -- see p.5's
+    # credit to John Frawley): if the dispositor is itself standing in
+    # THIS planet's own sign, each is "visiting the other's house" and
+    # both are treated as home/NORMAL. Without this, a single-ruler body
+    # like Eris (fixed in Aries for decades) and Mars (which transits
+    # Taurus, Eris's sign, every ~2 years) can lock into a permanent
+    # two-planet loop that never existed when Venus/Mercury ruled Taurus/
+    # Virgo with two signs each to fall back on.
+    if disp_sign == ruled_sign:
+        return NORMAL, False
+
     return _status_for_placement(chart, dispositor, disp_sign, _visited | {planet})
 
 
