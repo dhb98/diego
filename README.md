@@ -55,6 +55,20 @@ Everything in the uploaded book excerpt that states a mechanical rule:
 - aPOF's explicit angle rule (valuable) vs. plain POF near an angle
   (explicitly ignored by the book).
 
+## Rule coverage
+
+Every rule stated in the available pages has been catalogued (41 of
+them) and audited against the code. All 41 are implemented. The
+audit table lives in the commit history; the short version is that the
+engine covers Lord assignment and interception, the full dispositor
+status system (own sign / detriment with both stated escape routes /
+neutral recursion, Rx, 29th degree with propagation, Via Combusta,
+Spica), Moon travel aspects and timing, Moon-to-angle in every aspect,
+POF and aPOF including the three-part Final status, antiscia
+throughout, house-cusp proximity, the four angle axes, the
+Mars/Saturn/Uranus/Neptune/Pluto special tables, the Asc-Mc midpoint
+rule, and the Node rules.
+
 ## What it does NOT implement (and says so in its output)
 
 The uploaded PDF is a 42-page excerpt; it runs out mid-sentence partway
