@@ -236,6 +236,26 @@ def test_generic_planet_square_angle_helps_own_team():
     assert retro[0].team == "FAV", "reverse (Rx) L7 Mercury square MC hurts the dog"
 
 
+def test_moon_angle_counts_non_conjunction_aspects():
+    # p.19-20: "any normal Moon aspect to the ASC, DSC, MC or IC will
+    # bring beneficial effect to the favorite" -- not conjunctions only.
+    # The book's example is a Moon at 7 Sag squaring an 8 Pisces Asc-Dsc.
+    from stellar_wheelhouse.aspects import moon_angle_aspect
+
+    chart = parse_chart(
+        "Favorite = Jupiter\nUnderdog = Mercury\n"
+        "House 1: 8°00' Pis  (338.0), Neptune\n"
+        "House 10: 8°00' Sag  (248.0), Jupiter\n"
+        "House 7: 8°00' Vir  (158.0), Ceres\n"
+        "Moon: 7°00' Sag  (247.0)\n"
+        "Sun: 11°13' Leo  (131.23)\n"
+    )
+    f = moon_angle_aspect(chart)
+    assert f is not None, "a Moon square to the Asc-Dsc axis must be picked up"
+    assert "square" in f.description or "conjunct" in f.description
+    assert f.team == "FAV"
+
+
 def test_analyze_fixture_end_to_end():
     with open(FIXTURE) as f:
         result = analyze(f.read())

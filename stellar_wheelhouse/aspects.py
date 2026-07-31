@@ -176,24 +176,38 @@ def moon_node_square(chart: Chart) -> Factor | None:
 
 
 def moon_angle_aspect(chart: Chart) -> Factor | None:
-    """Moon within 2 deg applying to ASC/DSC/MC/IC: a whole-game theme
-    favoring the favorite, unless the Moon itself is Lord 7 (p.24-25)."""
+    """Moon within 2 deg applying to an angle: a whole-game theme
+    favoring the favorite, unless the Moon itself is Lord 7 (p.19, p.24-25).
+
+    NOT just conjunctions -- "Not only does a normal Moon benefit a team
+    when applying to conjunct an angle within 2 degrees, any normal Moon
+    aspect to the ASC, DSC, MC or IC will bring beneficial effect to the
+    favorite every time as well... Seeing if the Moon is within 2 degrees
+    conjunct or in other major aspect with an angle axis is always among
+    the first things to review" (p.19). The book's own example is a Moon
+    squaring the Asc-Dsc axis. Judged statically from the chart's start
+    (p.20), and the Moon is never retrograde.
+    """
     moon_lon = chart.lon("Moon")
     if moon_lon is None:
         return None
     moon_status = body_status(chart, "Moon")
-    angles = {"ASC": chart.asc, "DSC": chart.dsc, "MC": chart.mc, "IC": chart.ic}
+
     best = None
-    for name, lon in angles.items():
-        d = forward_delta(moon_lon, lon)
-        # Static "at the start" check per p.19-20: only applying (Moon hasn't
-        # passed it), so we don't wrap past 180 the way a moving-window
-        # search would; treat >2 as not-yet-applying rather than "already past".
-        if d <= ANGLE_ORB and (best is None or d < best[1]):
-            best = (name, d)
+    for axis_name, p1 in (("Asc-Dsc", chart.asc), ("Mc-Ic", chart.mc)):
+        rel = axis_relationship(moon_lon, False, p1, ANGLE_ORB)
+        if rel and (best is None or rel[1] < best[2]):
+            best = (axis_name, rel[0], rel[1])
     if not best:
         return None
-    angle_name, orb = best
+
+    axis_name, kind, orb = best
+    label = {
+        "conjunct_p1": f"conjunct {'ASC' if axis_name == 'Asc-Dsc' else 'MC'}",
+        "conjunct_p2": f"conjunct {'DSC' if axis_name == 'Asc-Dsc' else 'IC'}",
+        "square": f"square {axis_name}",
+        "trine": f"sextile/trine {axis_name}",
+    }[kind]
     baseline = DOG if 7 in chart.lord_numbers("Moon") else FAV
     effect_team = _flip_if_reverse(baseline, moon_status)
     cyclic = _is_cyclic(chart, "Moon")
@@ -202,7 +216,7 @@ def moon_angle_aspect(chart: Chart) -> Factor | None:
         note = _cycle_note(chart, "Moon") + " " + note
     return Factor(
         category="Moon-Angle",
-        description=f"Moon applying to {angle_name} within {orb:.2f} deg [{moon_status.lower()} Moon]",
+        description=f"Moon {label} within {orb:.2f} deg [{moon_status.lower()} Moon]",
         team=effect_team,
         weight=2.0,
         note=note,
