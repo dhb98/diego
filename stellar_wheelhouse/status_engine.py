@@ -127,9 +127,25 @@ def _status_for_placement(chart: Chart, planet: str, sign: str, _path: tuple[str
 
     dispositor = SIGN_RULER[sign]
     if sign == opposite_sign(ruled_sign):
-        # Detriment: one-hop exception check only, no further recursion.
+        # Detriment. TWO stated escape routes, both one-hop lookups that
+        # stop the chain rather than recursing:
+        #   1. the dispositor stands in its own sign ("Venus in Aries,
+        #      Mars in Aries = Venus' dispositor is super happy and this
+        #      'saves' Venus", p.42);
+        #   2. the DISPOSITOR'S OWN dispositor stands in its own sign --
+        #      "The Moon hates Capricorn and is always reverse in status
+        #      unless its dispositor Saturn is very strong in Cap OR
+        #      SATURN'S BOSS IS IN ITS OWN SIGN" (p.45), restated for
+        #      Mercury in Sagittarius as "unless its dispositor Jupiter
+        #      was in Sag itself or its boss was super happy in its own
+        #      sign" (p.47).
         if _dispositor_in_own_sign(chart, dispositor):
             return NORMAL, False
+        disp_lon = chart.lon(dispositor)
+        if disp_lon is not None:
+            disp_sign, _ = _sign_and_deg(disp_lon)
+            if _dispositor_in_own_sign(chart, SIGN_RULER[disp_sign]):
+                return NORMAL, False
         return REVERSE, False
 
     # Neutral sign: take on the dispositor's full status at its actual position.

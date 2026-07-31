@@ -257,7 +257,9 @@ def planet_cusp_aspects(chart: Chart) -> list[Factor]:
             if house_num in (3, 9):
                 continue
             if base_name == "Neptune" and house_num in (1, 4, 7, 10):
-                continue  # Neptune's angle behavior is status-independent and handled by neptune_angle_aspects()
+                continue  # Neptune's angle behaviour is status-independent (neptune_angle_aspects)
+            if base_name in ("Uranus", "Pluto") and house_num in (1, 10):
+                continue  # stated conjunction rules override the generic cusp logic
             signed = ((lon - cusp.longitude + 180) % 360) - 180  # + = just inside house, - = just outside
             if abs(signed) > CUSP_ORB:
                 continue
@@ -333,13 +335,18 @@ SPECIAL_AXIS_RULES = {
         ("Mc-Ic", "square"): (FAV, 1),
     },
     "Uranus": {
-        # Uranus's Asc-Dsc trine team was not legible in the excerpt
-        # (only "(unless L7)" survived); inferred as DOG from "Uranus is
-        # normally dog biased" (p.84) and the symmetry of the other
-        # entries. Mc-Ic trine for Uranus is not stated at all and is
-        # left out (falls through to the generic baseline below).
-        ("Asc-Dsc", "trine"): (DOG, 7),
+        # The excerpt's Uranus line lost its team ("Uranus trine Asc-Dsc
+        # (unless L7)."). It is FAV: Mars, Saturn and Pluto all read
+        # "trine Asc-Dsc = fav (unless L7)", and Uranus carries the same
+        # "(unless L7)" qualifier that marks every fav entry. Its stated
+        # square rules (Asc-Dsc = dog, Mc-Ic = fav) match that pattern
+        # exactly, so the table is complete and consistent this way.
+        ("Asc-Dsc", "trine"): (FAV, 7),
         ("Asc-Dsc", "square"): (DOG, 1),
+        # Not printed for Uranus, but supplied by the stated meta-rule:
+        # "Mars, Sat, Ur, and Plu hitting the Mc-Ic axis are flipped
+        # response from their answers to the Asc-Dsc" (p.83).
+        ("Mc-Ic", "trine"): (DOG, 7),
         ("Mc-Ic", "square"): (FAV, 7),
     },
     "Pluto": {
@@ -457,20 +464,77 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
     return factors
 
 
+# Outer-planet conjunctions to the ASC and MC, stated individually on
+# p.83-84 and overriding the generic planet-on-cusp logic. "Uranus,
+# Neptune and Pluto have special authority as outer planets regardless
+# which Lord they are."
+#   Uranus conjunct Asc = dog (if L7, watch which side it occupies)
+#   Uranus conjunct Mc  = fav
+#   Neptune conj Asc    = fav
+#   Neptune conj Mc     = dog      <- the one case that contradicts
+#                                     Neptune's own blanket angle rule;
+#                                     the specific rule wins.
+#   Pluto conjunct Asc  = dog (unless L1)   [and "Pluto/aPluto on Asc = dog+"]
+#   Pluto conjunct Mc   = fav               [and "Pluto/aPluto on Mc = fav+"]
+OUTER_ANGLE_CONJUNCTIONS = {
+    "Uranus": {"ASC": (DOG, None), "MC": (FAV, None)},
+    "Neptune": {"ASC": (FAV, None), "MC": (DOG, None)},
+    "Pluto": {"ASC": (DOG, 1), "MC": (FAV, None)},
+}
+
+
+def outer_planet_angle_conjunctions(chart: Chart) -> list[Factor]:
+    factors = []
+    for planet, rules in OUTER_ANGLE_CONJUNCTIONS.items():
+        retro = chart.is_rx(planet)
+        for body in (planet, "a" + planet):
+            lon = chart.lon(body)
+            if lon is None:
+                continue
+            status = body_status(chart, body)
+            for angle_name, angle_lon in (("ASC", chart.asc), ("MC", chart.mc)):
+                d = min(applying_delta(lon, angle_lon, retro),
+                        applying_delta(angle_lon, lon, False))
+                if d > ANGLE_ORB:
+                    continue
+                baseline, unless_lord = rules[angle_name]
+                if unless_lord is not None and unless_lord in chart.lord_numbers(planet):
+                    continue  # carve-out; fall silent rather than guess the alternative
+                # Neptune's angle behaviour is explicitly status-independent
+                # ("normal OR reverse ... seems to always help favorite").
+                effect = baseline if planet == "Neptune" else _flip_if_reverse(baseline, status)
+                factors.append(Factor(
+                    category="Outer-Angle",
+                    description=(
+                        f"{body} ({status.lower()}) conjunct {angle_name} within {d:.2f} deg "
+                        f"[{planet} special rule]"
+                    ),
+                    team=effect,
+                    weight=2.25,
+                    note=_cycle_note(chart, body),
+                    low_confidence=_is_cyclic(chart, body),
+                ))
+    return factors
+
+
 def neptune_angle_aspects(chart: Chart) -> list[Factor]:
-    """Neptune's blanket rule (p.84): ANY aspect -- normal or reverse --
-    from Neptune/aNeptune to ASC, MC, DSC or IC helps the favorite,
-    unless Neptune itself is Lord 7 (then it helps the dog). Status is
-    explicitly ignored here, unlike every other rule in this module."""
+    """Neptune's blanket rule (p.84): "Neptune normal OR reverse aspecting
+    any Asc, Mc, Dsc or Ic seems to always help favorite (unless L7)."
+    Status is explicitly ignored, unlike every other rule in this module.
+
+    Conjunctions to the ASC and MC are NOT handled here -- those have
+    their own specific entries (Neptune conj Asc = fav, conj Mc = dog)
+    in outer_planet_angle_conjunctions, and the specific rule wins over
+    this general one where they disagree.
+    """
     factors = []
     baseline = DOG if 7 in chart.lord_numbers("Neptune") else FAV
     retro = chart.is_rx("Neptune")
-    angle_points = {"ASC": chart.asc, "MC": chart.mc, "DSC": chart.dsc, "IC": chart.ic}
     for body in ("Neptune", "aNeptune"):
         lon = chart.lon(body)
         if lon is None:
             continue
-        for name, alon in angle_points.items():
+        for name, alon in (("DSC", chart.dsc), ("IC", chart.ic)):
             d = min(applying_delta(lon, alon, retro), applying_delta(alon, lon, False))
             if d <= ANGLE_ORB:
                 factors.append(Factor(
@@ -486,6 +550,36 @@ def neptune_angle_aspects(chart: Chart) -> list[Factor]:
                     description=f"{body} {rel[0]} {axis_name} (status-independent)",
                     team=baseline, weight=1.75,
                 ))
+    return factors
+
+
+def asc_mc_midpoint_factors(chart: Chart) -> list[Factor]:
+    """"Mars on the Asc-Mc midpoint (1 degree) = dog (unless L1)" and the
+    identical rule for Saturn (p.83). Conjunction only -- the book says
+    "on" the midpoint; other aspects to it are reported unscored."""
+    factors = []
+    mid = (chart.mc + ((chart.asc - chart.mc) % 360.0) / 2.0) % 360.0
+    for planet in ("Mars", "Saturn"):
+        retro = chart.is_rx(planet)
+        for body in (planet, "a" + planet):
+            lon = chart.lon(body)
+            if lon is None:
+                continue
+            d = min(abs(((lon - mid + 180) % 360) - 180),
+                    abs(((lon - (mid + 180) % 360 + 180) % 360) - 180))
+            if d > 1.0:
+                continue
+            if 1 in chart.lord_numbers(planet):
+                continue  # "(unless L1)"
+            status = body_status(chart, body)
+            factors.append(Factor(
+                category="Midpoint",
+                description=f"{body} ({status.lower()}) on the Asc-Mc midpoint within {d:.2f} deg",
+                team=_flip_if_reverse(DOG, status),
+                weight=1.5,
+                note=_cycle_note(chart, body),
+                low_confidence=_is_cyclic(chart, body),
+            ))
     return factors
 
 
@@ -625,6 +719,53 @@ def moon_extra_axis_contacts(chart: Chart) -> list[str]:
     return found
 
 
+def apof_planet_conjunctions(chart: Chart) -> list[Factor]:
+    """"The same for aPOF within 2 degrees of a regular planet on the
+    wheel: it is helpful for that Lord, especially if L1 or L7. Keep in
+    mind the status of each." (p.77)
+
+    Mars, Uranus and Neptune are excluded: their own p.83-84 entries
+    already cover a conjunction to the POF/aPOF with an absolute fav/dog
+    answer, and a specific rule beats this general one.
+    """
+    factors = []
+    apof = chart.lon("aPOF")
+    if apof is None:
+        return factors
+    apof_status = pof_final_status(chart, antiscia=True)
+    apof_cyclic = pof_final_status_is_cyclic(chart, antiscia=True)
+
+    for planet in CHART_BODIES:
+        if planet in POF_CAST_RULES:      # Mars / Uranus / Neptune
+            continue
+        lon = chart.lon(planet)
+        if lon is None:
+            continue
+        team = chart.team_of(planet)
+        if team is None:
+            continue
+        d = abs(((lon - apof + 180) % 360) - 180)
+        if d > ANGLE_ORB:
+            continue
+        status = body_status(chart, planet)
+        combined = combine(status, apof_status)
+        lords = chart.lord_numbers(planet)
+        key_lord = 1 in lords or 7 in lords
+        factors.append(Factor(
+            category="aPOF-Planet",
+            description=(
+                f"aPOF within {d:.2f} deg of {planet} "
+                f"(L{'/L'.join(str(n) for n in lords)}, {team}) "
+                f"[{status.lower()} x {apof_status.lower()} aPOF = {combined.lower()}]"
+            ),
+            team=team if combined == NORMAL else opposite(team),
+            weight=2.25 if key_lord else 1.25,
+            note=_cycle_note(chart, planet),
+            low_confidence=_is_cyclic(chart, planet) or apof_cyclic,
+        ))
+    return factors
+
+
 def unruled_pof_casts(chart: Chart) -> list[str]:
     """Planet->POF aspects the excerpt gives no rule for, so the report
     can name them instead of silently dropping them."""
@@ -640,8 +781,13 @@ def unruled_pof_casts(chart: Chart) -> list[str]:
                 if pof_lon is None:
                     continue
                 hit = _closest_aspect(lon, pof_lon, retro, ANGLE_ORB)
-                if hit:
-                    found.append(f"{body} {hit[0]} {label} within {hit[1]:.2f} deg")
+                if not hit:
+                    continue
+                # aPOF conjunctions now have a stated general rule (p.77)
+                # and are scored by apof_planet_conjunctions.
+                if label == "aPOF" and hit[0] == "Conjunction" and not body.startswith("a"):
+                    continue
+                found.append(f"{body} {hit[0]} {label} within {hit[1]:.2f} deg")
     return found
 
 
