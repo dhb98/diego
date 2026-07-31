@@ -57,6 +57,9 @@ ASPECT_ANGLES = {
 FAVORITE_LORDS = [1, 10, 2, 6, 5]
 UNDERDOG_LORDS = [7, 4, 8, 12, 11]
 
+FAV_HOUSES = set(FAVORITE_LORDS)
+DOG_HOUSES = set(UNDERDOG_LORDS)
+
 # Relative importance/weight of each Lord within its side, in the order
 # given in the book ("L1 and L7 ... most important, followed by L10 and
 # L4 ... remaining Lords listed roughly in order of strength", p.17,

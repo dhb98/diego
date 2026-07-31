@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from .constants import LORD_WEIGHT, FAV_HOUSES
+
 
 SIGN_ABBR = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
              "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis"]
@@ -106,12 +108,34 @@ class Chart:
         return sorted(h for h, c in self.houses.items() if c.ruler == planet and h not in (3, 9))
 
     def team_of(self, planet: str) -> str | None:
+        """Which side a body plays for.
+
+        A single planet can rule two of the ten scored houses at once --
+        e.g. Pisces on both the 6th and 7th cusps makes Neptune L6 (fav)
+        AND L7 (dog). The two Lords are never equally important in that
+        situation: houses that share a ruler are never opposite each
+        other, and opposite houses are exactly the pairs the book gives
+        equal rank (1/7, 10/4, 2/8, 6/12, 5/11). So the higher-ranked
+        Lord decides the side, which for Neptune-as-L6-and-L7 means the
+        dog -- L7 is the dog's strongest planet while L6 is nearly the
+        fav's weakest (p.17, p.26).
+        """
         base = planet[1:] if planet.startswith("a") and planet != "aPOF" else planet
+        lords = self.lord_numbers(base)
+        if lords:
+            strongest = max(lords, key=lambda n: LORD_WEIGHT[n])
+            return "FAV" if strongest in FAV_HOUSES else "DOG"
+        # No house cusp data: fall back to the report's declared lists.
         if base in self.favorite_planets:
             return "FAV"
         if base in self.underdog_planets:
             return "DOG"
         return None
+
+    def deciding_lord(self, planet: str) -> int | None:
+        base = planet[1:] if planet.startswith("a") and planet != "aPOF" else planet
+        lords = self.lord_numbers(base)
+        return max(lords, key=lambda n: LORD_WEIGHT[n]) if lords else None
 
 
 _POS_LINE = re.compile(

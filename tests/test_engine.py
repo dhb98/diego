@@ -139,6 +139,30 @@ def test_fixture_parses_key_positions():
     assert chart.lord_numbers("Saturn") == [2]
 
 
+def test_dual_rulership_resolves_to_strongest_lord():
+    # Pisces on both the 6th and 7th cusps makes Neptune L6 (fav, nearly
+    # the weakest fav Lord) and L7 (dog, the dog's strongest). The dog
+    # must win that tie-break; naively trusting the report's
+    # "Favorite = ...Neptune..." line gets it backwards.
+    chart = parse_chart(
+        "Favorite = Ceres, Mercury, Venus, Neptune, Uranus\n"
+        "Underdog = Neptune, Jupiter, Mars, Ceres, Sun\n"
+        "House 1: 27°52' Vir  (177.87), Ceres\n"
+        "House 6: 0°34' Pis  (330.56), Neptune\n"
+        "House 7: 27°52' Pis  (357.87), Neptune\n"
+        "House 12: 0°34' Vir  (150.56), Ceres\n"
+    )
+    assert chart.lord_numbers("Neptune") == [6, 7]
+    assert chart.deciding_lord("Neptune") == 7
+    assert chart.team_of("Neptune") == "DOG"
+    assert chart.team_of("aNeptune") == "DOG"
+
+    # Ceres is L1 (fav, strongest) and L12 (dog, weak) -> favorite.
+    assert chart.lord_numbers("Ceres") == [1, 12]
+    assert chart.deciding_lord("Ceres") == 1
+    assert chart.team_of("Ceres") == "FAV"
+
+
 def test_analyze_fixture_end_to_end():
     with open(FIXTURE) as f:
         result = analyze(f.read())

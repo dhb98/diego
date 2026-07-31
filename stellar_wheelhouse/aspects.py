@@ -16,7 +16,7 @@ comment.
 from __future__ import annotations
 
 from .constants import (
-    FAV, DOG, NORMAL, CHART_BODIES, LORD_WEIGHT,
+    FAV, DOG, NORMAL, CHART_BODIES, LORD_WEIGHT, FAV_HOUSES,
     MOON_TRAVEL_ORB, ANGLE_ORB, CUSP_ORB, NODE_ORB,
 )
 from .factor import Factor, opposite
@@ -88,6 +88,8 @@ def moon_body_aspects(chart: Chart) -> list[Factor]:
         weight = _lord_weight_for(chart, base_name)
         lords = chart.lord_numbers(base_name)
         lord_txt = "/".join(f"L{n}" for n in lords) if lords else "?"
+        if len(lords) > 1:
+            lord_txt += f", decided by L{chart.deciding_lord(base_name)}"
 
         factors.append(Factor(
             category="Moon-Planet",
@@ -213,7 +215,6 @@ def moon_angle_aspect(chart: Chart) -> Factor | None:
 # special case (p.77) and POF -> angle ignored (p.33, p.57).
 # ---------------------------------------------------------------------
 
-FAV_HOUSES = {1, 10, 2, 6, 5}
 
 
 def planet_cusp_aspects(chart: Chart) -> list[Factor]:
