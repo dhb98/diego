@@ -74,12 +74,21 @@ ignoring it.
   values in `aspects.py` are this engine's own translation into numbers
   so factors can be tallied -- treat the resulting score as a reasonable
   ordering, not a book-stated value.
-- **Unresolved dispositor loops are detected, not guessed.** The book
-  only ever demonstrates chains that terminate at a planet in its own
-  sign. If a chart's dispositor chain closes into a loop instead (rare,
-  but possible), every factor touching those planets is flagged
-  `low_confidence` and excluded from the scored verdict rather than
-  silently defaulted to Normal.
+- **Closed dispositor loops are reasoned through, not guessed.** The
+  book only ever demonstrates chains that terminate at a planet in its
+  own sign, but that is not guaranteed — through June–July 2026, for
+  instance, no planet is in its own sign *or* its detriment, so every
+  chain necessarily closes into a loop. That turns out to be resolvable
+  from the book's own wording: REVERSE only ever *originates* at a
+  detriment placement, and neutral planets merely *inherit* it, so a
+  loop with no detriment member has no source of reverse and is
+  provably NORMAL. The sole exception is the 29th degree, which does
+  propagate down the chain (p.77) — an odd number of 29-degree members
+  inside a loop is genuinely self-contradictory, and only that case is
+  flagged `low_confidence` and held out of the scored verdict.
+- **Thin evidence is labeled as such.** A "lopsided" score built from
+  one surviving factor is not the same as one built from a dozen, and
+  the verdict line says so explicitly.
 - Every non-obvious extrapolation beyond what the excerpt states
   outright is called out in a code comment where it happens (see
   `aspects.py`'s module docstring and `status_engine.py`'s docstring for

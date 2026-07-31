@@ -78,7 +78,17 @@ def _dispositor_in_own_sign(chart: Chart, dispositor: str) -> bool:
     return PLANET_RULES.get(dispositor) == disp_sign
 
 
-def _status_for_placement(chart: Chart, planet: str, sign: str, _visited: frozenset[str] = frozenset()) -> tuple[str, bool]:
+def _at_anaretic(chart: Chart, planet: str) -> bool:
+    """Is `planet` at 29 degrees of a sign it does not rule? Unlike Rx,
+    the 29th-degree flip propagates down the dispositor chain (p.77)."""
+    lon = chart.lon(planet)
+    if lon is None:
+        return False
+    sign, deg = _sign_and_deg(lon)
+    return deg >= ANARETIC_DEGREE and PLANET_RULES.get(planet) != sign
+
+
+def _status_for_placement(chart: Chart, planet: str, sign: str, _path: tuple[str, ...] = ()) -> tuple[str, bool]:
     """Own/detriment/neutral status for `planet`'s identity (its
     rulership/detriment) AS IF standing in `sign`. For a real planet,
     `sign` is just its actual current sign; for an antiscia point,
@@ -87,8 +97,29 @@ def _status_for_placement(chart: Chart, planet: str, sign: str, _visited: frozen
     determine the antiscia planet's status ... If the antiscia planet is
     in its own sign, it is normal there"). Returns (status, cyclic).
     """
-    if planet in _visited or planet not in PLANET_RULES:
-        return NORMAL, planet in _visited
+    if planet not in PLANET_RULES:
+        return NORMAL, False
+
+    if planet in _path:
+        # Closed dispositor cycle. Every step that got here was a NEUTRAL
+        # placement -- own-sign and detriment both return above without
+        # recursing -- and by the book's own wording REVERSE only ever
+        # ORIGINATES at a detriment ("When a planet is in a sign of
+        # detriment ... it is REVERSE"); a neutral planet merely INHERITS
+        # it ("When a planet is in a neutral sign and the planet's
+        # dispositor is reverse, that planet is also REVERSE"). A cycle
+        # with no detriment member therefore has no source of reverse and
+        # is provably NORMAL, not a coin flip.
+        #
+        # The one exception is the 29th degree, which the book says DOES
+        # propagate down the chain (p.77). An odd number of 29-degree
+        # members inside a cycle makes it genuinely self-contradictory
+        # (A would have to equal flip(A)), so that case -- and only that
+        # case -- is still reported as unresolved.
+        cycle = _path[_path.index(planet):]
+        anaretic_in_cycle = sum(1 for p in cycle if _at_anaretic(chart, p))
+        return NORMAL, anaretic_in_cycle % 2 == 1
+
     ruled_sign = PLANET_RULES[planet]
 
     if sign == ruled_sign:
@@ -119,7 +150,16 @@ def _status_for_placement(chart: Chart, planet: str, sign: str, _visited: frozen
     if disp_sign == ruled_sign:
         return NORMAL, False
 
-    return _status_for_placement(chart, dispositor, disp_sign, _visited | {planet})
+    status, cyclic = _status_for_placement(chart, dispositor, disp_sign, _path + (planet,))
+
+    # The dispositor's own 29th-degree state carries down to its
+    # underling (p.77: "Unlike Rx, the 29-degree status of a planet DOES
+    # affect its essential status like a sign, and DOES go on to affect
+    # any dispositors"). Its Rx state deliberately does not (p.48-49).
+    if _at_anaretic(chart, dispositor):
+        status = flip(status)
+
+    return status, cyclic
 
 
 def _planet_chain_status(chart: Chart, planet: str) -> tuple[str, bool]:

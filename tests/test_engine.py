@@ -109,19 +109,54 @@ def test_fixture_dispositor_chains_all_resolve():
         assert body_status_is_cyclic(chart, b) is False, b
 
 
-def test_synthetic_neutral_dispositor_loop_is_detected():
-    # A genuine 3-way neutral loop with nobody in their own sign or
-    # detriment (Mercury-in-Scorpio -> Pluto-in-Aquarius -> Uranus-in-
-    # Gemini -> Mercury-in-Scorpio...) is a scenario the book never
-    # addresses; the engine must flag it rather than silently guess.
+def test_pure_neutral_loop_resolves_to_normal():
+    # A 3-way neutral loop with nobody in own sign or detriment
+    # (Mercury-in-Scorpio -> Pluto-in-Aquarius -> Uranus-in-Gemini ->
+    # back to Mercury). REVERSE only originates at a detriment (p.42-43),
+    # so a cycle containing none cannot carry reverse: NORMAL is provable,
+    # not a guess, and must NOT be flagged as unresolved.
     chart = _chart_with(
         Mercury=(215.0, False),  # 5 Scorpio
         Pluto=(305.0, False),    # 5 Aquarius
         Uranus=(65.0, False),    # 5 Gemini
     )
+    for body in ("Mercury", "Pluto", "Uranus"):
+        assert body_status(chart, body) == NORMAL, body
+        assert body_status_is_cyclic(chart, body) is False, body
+
+
+def test_loop_with_odd_anaretic_member_stays_unresolved():
+    # Same cycle, but Pluto now sits at 29 Aquarius. The 29th degree DOES
+    # propagate down the chain (p.77), so going around the loop demands
+    # A == flip(A) -- genuinely self-contradictory, and still flagged.
+    chart = _chart_with(
+        Mercury=(215.0, False),  # 5 Scorpio
+        Pluto=(329.5, False),    # 29.5 Aquarius
+        Uranus=(65.0, False),    # 5 Gemini
+    )
     assert body_status_is_cyclic(chart, "Mercury") is True
-    assert body_status_is_cyclic(chart, "Pluto") is True
-    assert body_status_is_cyclic(chart, "Uranus") is True
+
+    # With a second 29-degree member the flips cancel and it resolves again.
+    chart2 = _chart_with(
+        Mercury=(239.5, False),  # 29.5 Scorpio
+        Pluto=(329.5, False),    # 29.5 Aquarius
+        Uranus=(65.0, False),    # 5 Gemini
+    )
+    assert body_status_is_cyclic(chart2, "Mercury") is False
+
+
+def test_anaretic_dispositor_propagates_down_chain():
+    # Mars in Gemini -> Mercury at 29 Leo -> Sun in Leo (own sign).
+    # The Sun is normal, so Mercury would be normal, but Mercury's own
+    # 29th degree flips it -- and that flip carries down to Mars (p.77).
+    chart = _chart_with(
+        Mars=(65.0, False),      # 5 Gemini
+        Mercury=(149.5, False),  # 29.5 Leo
+        Sun=(128.0, False),      # 8 Leo, own sign
+    )
+    assert body_status(chart, "Sun") == NORMAL
+    assert body_status(chart, "Mercury") == REVERSE
+    assert body_status(chart, "Mars") == REVERSE
 
 
 def test_fixture_parses_key_positions():
