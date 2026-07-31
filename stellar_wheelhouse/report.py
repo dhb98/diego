@@ -82,6 +82,8 @@ def render(result: AnalysisResult) -> str:
     if v.excluded_low_confidence:
         lines.append(f"Excluded (low-confidence): {v.excluded_low_confidence} factors")
     lines.append(f"Lean: {v.lean}")
+    lines.append(f"Clearness: {v.clearness}/10")
+    lines.append(f"Suggestion: {v.suggestion}")
     lines.append(f"Read: {v.confidence}")
     lines.append("")
     lines.append(

@@ -41,6 +41,42 @@ class Verdict:
     lean: str
     confidence: str
     excluded_low_confidence: int
+    clearness: float = 0.0   # 0-10, how one-sided AND well-evidenced the chart is
+    suggestion: str = ""     # what the book's own betting discipline implies
+
+
+def _clearness(fav: float, dog: float, n_factors: int, excluded: int) -> float:
+    """A 0-10 reading of how decisively the chart speaks.
+
+    Combines how lopsided the tally is with how much evidence produced
+    it -- the book wants BOTH ("lots of marbles heavy on one side of the
+    scale with only a light smattering on the other", p.22, and it warns
+    that one tiny Moon aspect is not enough to back a big underdog).
+    A one-sided split resting on a single factor is not a clear chart.
+
+    NOTE: this measures clarity of the SIGNAL, not likelihood of winning.
+    On the ten charts run so far the two have not correlated.
+    """
+    total = fav + dog
+    if total == 0 or n_factors == 0:
+        return 0.0
+    ratio = abs(fav - dog) / total                 # 0 = tied, 1 = one-sided
+    margin = min(abs(fav - dog) / 6.0, 1.0)        # absolute gap, saturating at 6 pts
+    evidence = min(n_factors / 8.0, 1.0)           # saturates at 8 scored factors
+    score = 10.0 * (0.5 * ratio + 0.3 * margin + 0.2 * evidence)
+    if excluded:                                    # unresolved factors dilute confidence
+        score *= max(0.5, 1.0 - 0.1 * excluded)
+    return round(score, 1)
+
+
+def _suggestion(lean: str, clearness: float) -> str:
+    if lean == "no lean" or clearness < 3.0:
+        return "PASS"
+    if clearness < 5.0:
+        return f"pass / watch only ({lean} lean, too thin)"
+    if clearness < 7.0:
+        return f"small stake on {lean}"
+    return f"strongest available: {lean}"
 
 
 def summarize(factors: list[Factor]) -> Verdict:
@@ -83,4 +119,9 @@ def summarize(factors: list[Factor]) -> Verdict:
                 "factors resolved cleanly, the rest sit in an unresolved dispositor loop"
             )
 
-    return Verdict(fav_score, dog_score, fav_count, dog_count, lean, confidence, excluded)
+    clearness = _clearness(fav_score, dog_score, fav_count + dog_count, excluded)
+    return Verdict(
+        fav_score, dog_score, fav_count, dog_count, lean, confidence, excluded,
+        clearness=clearness,
+        suggestion=_suggestion(lean, clearness),
+    )
