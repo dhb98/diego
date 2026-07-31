@@ -29,6 +29,14 @@ def _unscored_notes(chart: Chart) -> list[str]:
         for prefix, explanation in UNSCORED_HINTS:
             if line.startswith(prefix):
                 notes.append(f"{line} -- {explanation}")
+
+    from .aspects import unruled_pof_casts
+    for cast in unruled_pof_casts(chart):
+        notes.append(
+            f"{cast} -- the excerpt states planet-to-POF rules only for Mars, "
+            "Uranus and Neptune (p.83-84); no rule for this planet survives in "
+            "the uploaded pages, so it is left unscored rather than guessed."
+        )
     return notes
 
 

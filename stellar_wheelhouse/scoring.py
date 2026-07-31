@@ -25,6 +25,7 @@ def collect_all_factors(chart: Chart) -> list[Factor]:
     factors += aspects.planet_axis_aspects(chart)
     factors += aspects.neptune_angle_aspects(chart)
     factors += aspects.apof_angle_aspects(chart)
+    factors += aspects.planet_pof_aspects(chart)
     factors += aspects.node_aspects(chart)
 
     factors.sort(key=lambda f: f.weight, reverse=True)

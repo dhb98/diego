@@ -474,6 +474,102 @@ def apof_angle_aspects(chart: Chart) -> list[Factor]:
 
 
 # ---------------------------------------------------------------------
+# Planet -> POF / aPOF casts (p.83-84). "The POF does also CAST aspects.
+# Treat it just like a planet" (p.57), and the p.83 list header scopes
+# these to "Planets and aPlanets (all with NORMAL status within 2
+# degrees applying)".
+#
+# The excerpt states these for Mars, Uranus and Neptune ONLY. Saturn,
+# Venus, Ceres, Jupiter etc. casting to the POF get no stated rule -- any
+# such rule would be in the truncated pages 85-193 -- so those are
+# reported as unscored rather than guessed at.
+# ---------------------------------------------------------------------
+
+# planet -> (aspects_favoring_fav, aspects_favoring_dog)
+POF_CAST_RULES = {
+    "Mars": ({"Sextile", "Trine"}, {"Conjunction", "Square", "Opposition"}),
+    "Uranus": ({"Conjunction", "Sextile", "Trine"}, {"Square", "Opposition"}),
+    "Neptune": ({"Conjunction", "Sextile", "Trine"}, {"Square", "Opposition"}),
+}
+
+POF_CAST_UNRULED = ("Sun", "Mercury", "Venus", "Jupiter", "Saturn", "Pluto", "Eris", "Ceres")
+
+
+def _closest_aspect(body_lon: float, target_lon: float, retro: bool, orb: float):
+    """Nearest applying major aspect between two points within `orb`."""
+    from .constants import ASPECT_ANGLES
+    from .geometry import aspect_points
+    best = None
+    for name, angle in ASPECT_ANGLES.items():
+        for pt in aspect_points(target_lon, angle):
+            d = applying_delta(body_lon, pt, retro)
+            if d <= orb and (best is None or d < best[1]):
+                best = (name, d)
+    return best
+
+
+def planet_pof_aspects(chart: Chart) -> list[Factor]:
+    factors = []
+    for planet, (fav_aspects, dog_aspects) in POF_CAST_RULES.items():
+        retro = chart.is_rx(planet)
+        for body in (planet, "a" + planet):
+            lon = chart.lon(body)
+            if lon is None:
+                continue
+            status = body_status(chart, body)
+            for key, antiscia, label in (("POF", False, "POF"), ("aPOF", True, "aPOF")):
+                pof_lon = chart.lon(key)
+                if pof_lon is None:
+                    continue
+                hit = _closest_aspect(lon, pof_lon, retro, ANGLE_ORB)
+                if not hit:
+                    continue
+                aspect_name, orb = hit
+                baseline = FAV if aspect_name in fav_aspects else DOG if aspect_name in dog_aspects else None
+                if baseline is None:
+                    continue
+                pof_status = pof_final_status(chart, antiscia=antiscia)
+                # The book states these rules for a normal planet and is
+                # silent on whether the POF's own Final status also flips
+                # them. Combining both matches how every other paired
+                # rule in the method works (p.45-46, p.57).
+                combined = combine(status, pof_status)
+                effect_team = baseline if combined == NORMAL else opposite(baseline)
+                factors.append(Factor(
+                    category="Planet-POF",
+                    description=(
+                        f"{body} ({status.lower()}) {aspect_name} {label} within {orb:.2f} deg "
+                        f"[x {pof_status.lower()} {label} Final = {combined.lower()}]"
+                    ),
+                    team=effect_team,
+                    weight=1.75,
+                    note=_cycle_note(chart, body),
+                    low_confidence=_is_cyclic(chart, body) or pof_final_status_is_cyclic(chart, antiscia=antiscia),
+                ))
+    return factors
+
+
+def unruled_pof_casts(chart: Chart) -> list[str]:
+    """Planet->POF aspects the excerpt gives no rule for, so the report
+    can name them instead of silently dropping them."""
+    found = []
+    for planet in POF_CAST_UNRULED:
+        retro = chart.is_rx(planet)
+        for body in (planet, "a" + planet):
+            lon = chart.lon(body)
+            if lon is None:
+                continue
+            for key, label in (("POF", "POF"), ("aPOF", "aPOF")):
+                pof_lon = chart.lon(key)
+                if pof_lon is None:
+                    continue
+                hit = _closest_aspect(lon, pof_lon, retro, ANGLE_ORB)
+                if hit:
+                    found.append(f"{body} {hit[0]} {label} within {hit[1]:.2f} deg")
+    return found
+
+
+# ---------------------------------------------------------------------
 # Nodes (p.68-69): conjunctions to planets/POF/aPOF, and the separate
 # 1-degree "planet square Nodes" rule. Outer planets (Uranus, Neptune,
 # Pluto) are explicitly excluded ("not relevant to this in my
