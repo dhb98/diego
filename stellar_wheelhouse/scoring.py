@@ -36,6 +36,48 @@ def collect_all_factors(chart: Chart) -> list[Factor]:
 
 
 @dataclass
+class KeyLordRead:
+    """The chart read using ONLY factors that involve Lord 1 or Lord 7 --
+    the favourite's and the underdog's main planets.
+
+    Restricted to MOON aspects, because that is the context in which the
+    book states the ranking: "the Lord that is being aspected by the Moon
+    does matter. It is a fact that generally speaking, a Moon aspect to
+    L1 or L10 is stronger than an aspect to L2, L6, with L5 being the
+    weakest" (p.25), alongside "L1 and L7 ... are the most important"
+    (p.17). When neither main planet takes a Moon aspect, this read stays
+    silent rather than manufacturing a verdict out of the Lords the book
+    itself calls weakest.
+
+    STATUS: UNVALIDATED. Over the fifteen test charts: 7/9 correct with
+    six no-calls (78%, p=0.090) -- not significant, and one of roughly
+    fifteen variants tried during development, so the apparent edge is
+    within what chance produces. Widening it to every factor touching
+    L1/L7 drops it to 7/12 (58%), which shows how fragile the number is.
+    Do not treat this as a proven edge; it is a pre-registered hypothesis
+    awaiting an out-of-sample test on 30-50 unseen charts.
+    """
+    lean: str                 # FAV, DOG, or "silent"
+    fav_score: float
+    dog_score: float
+    factors: list[Factor]
+
+    @property
+    def is_silent(self) -> bool:
+        return self.lean == "silent"
+
+
+def key_lord_read(factors: list[Factor]) -> KeyLordRead:
+    kf = [f for f in factors
+          if f.is_key_lord and not f.low_confidence and f.category == "Moon-Planet"]
+    fav = sum(f.weight for f in kf if f.team == FAV)
+    dog = sum(f.weight for f in kf if f.team == DOG)
+    if not kf or abs(fav - dog) < 1e-9:
+        return KeyLordRead("silent", fav, dog, kf)
+    return KeyLordRead(FAV if fav > dog else DOG, fav, dog, kf)
+
+
+@dataclass
 class Verdict:
     fav_score: float
     dog_score: float

@@ -72,6 +72,21 @@ def render(result: AnalysisResult) -> str:
         for n in result.unscored_notes:
             lines.append(f"- {n}")
 
+    k = result.key_lords
+    lines.append("")
+    lines.append("=" * 72)
+    lines.append("KEY-LORD READ  (Moon aspects to L1 / L7 only)")
+    lines.append("=" * 72)
+    if k.is_silent:
+        lines.append("SILENT -- neither main planet (L1 for the favourite, L7 for the")
+        lines.append("underdog) takes a Moon aspect. Under this read: PASS.")
+    else:
+        for f in sorted(k.factors, key=lambda f: -f.weight):
+            lines.append(f"  [{f.team:>3}] w={f.weight:<5.2f} {f.description}")
+        lines.append(f"  -> {k.lean}   ({k.fav_score:.2f} fav vs {k.dog_score:.2f} dog)")
+    lines.append("  UNVALIDATED: 7/9 with 6 no-calls on the 15 test charts (78%, p=0.090),")
+    lines.append("  one of ~15 variants tried. Not a proven edge -- awaiting out-of-sample test.")
+
     v = result.verdict
     lines.append("")
     lines.append("=" * 72)

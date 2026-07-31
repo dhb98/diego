@@ -310,3 +310,26 @@ if __name__ == "__main__":
             traceback.print_exc()
     print(f"\n{len(tests) - failed}/{len(tests)} passed")
     sys.exit(1 if failed else 0)
+
+
+def test_key_lord_uses_structured_lords_not_substrings():
+    # Guards the bug this feature was built on: "L1" as a substring also
+    # matches L10, L11 and L12. Only real Lord 1 / Lord 7 may qualify.
+    from stellar_wheelhouse.factor import Factor
+    assert Factor("x", "L10 planet", "FAV", 1.0, lords=(10,)).is_key_lord is False
+    assert Factor("x", "L11 planet", "FAV", 1.0, lords=(11,)).is_key_lord is False
+    assert Factor("x", "L12 planet", "FAV", 1.0, lords=(12,)).is_key_lord is False
+    assert Factor("x", "L1 planet", "FAV", 1.0, lords=(1,)).is_key_lord is True
+    assert Factor("x", "L7 planet", "FAV", 1.0, lords=(7,)).is_key_lord is True
+    assert Factor("x", "dual", "FAV", 1.0, lords=(1, 12)).is_key_lord is True
+    assert Factor("x", "no lords", "FAV", 1.0).is_key_lord is False
+
+
+def test_key_lord_read_goes_silent_without_main_planets():
+    from stellar_wheelhouse.scoring import key_lord_read
+    from stellar_wheelhouse.factor import Factor
+    only_minor = [Factor("c", "d", "FAV", 2.0, lords=(5,)),
+                  Factor("c", "d", "DOG", 1.0, lords=(11,))]
+    assert key_lord_read(only_minor).is_silent is True
+    with_key = only_minor + [Factor("c", "d", "DOG", 3.0, lords=(7,))]
+    assert key_lord_read(with_key).lean == "DOG"

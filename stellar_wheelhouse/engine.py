@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 from .chart_parser import parse_chart, Chart
-from .scoring import collect_all_factors, summarize, Verdict
+from .scoring import collect_all_factors, summarize, Verdict, key_lord_read, KeyLordRead
 from .factor import Factor
 
 
@@ -13,6 +13,7 @@ class AnalysisResult:
     chart: Chart
     factors: list[Factor]
     verdict: Verdict
+    key_lords: KeyLordRead
     unscored_notes: list[str]
 
 
@@ -94,4 +95,5 @@ def analyze(text: str) -> AnalysisResult:
     factors = collect_all_factors(chart)
     verdict = summarize(factors)
     notes = _unscored_notes(chart)
-    return AnalysisResult(chart=chart, factors=factors, verdict=verdict, unscored_notes=notes)
+    return AnalysisResult(chart=chart, factors=factors, verdict=verdict,
+                          key_lords=key_lord_read(factors), unscored_notes=notes)

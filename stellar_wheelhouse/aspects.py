@@ -99,6 +99,7 @@ def moon_body_aspects(chart: Chart) -> list[Factor]:
             ),
             team=effect_team,
             weight=weight,
+            lords=tuple(lords),
             note=_cycle_note(chart, "Moon", target),
             low_confidence=_is_cyclic(chart, "Moon", target),
             timing_pct=round(fwd / MOON_TRAVEL_ORB * 100, 1),
@@ -290,6 +291,7 @@ def planet_cusp_aspects(chart: Chart) -> list[Factor]:
                 ),
                 team=effect_team,
                 weight=base_weight,
+                lords=tuple(chart.lord_numbers(base_name)),
                 note=_cycle_note(chart, body),
                 low_confidence=_is_cyclic(chart, body),
             ))
@@ -421,6 +423,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                 description=f"{body} ({status.lower()}) {kind} {axis_name} within {orb:.2f} deg",
                 team=effect_team,
                 weight=weight * 1.3,
+                lords=tuple(chart.lord_numbers(base_name)),
                 note=_cycle_note(chart, body),
                 low_confidence=_is_cyclic(chart, body),
             ))
@@ -441,6 +444,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                 description=f"{body} ({status.lower()}) {kind.replace('_', ' ')} {axis_name} within {orb:.2f} deg",
                 team=effect_team,
                 weight=weight * 0.8,
+                lords=tuple(chart.lord_numbers(base_name)),
                 note=(_cycle_note(chart, body) + " Ax-Vx/EQD-EQA: supplementary angle set (p.65-67).").strip(),
                 low_confidence=_is_cyclic(chart, body),
             ))
@@ -458,6 +462,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                         description=f"{body} ({status.lower()}) {kind.replace('_', ' ')} EQD-EQA (RA) within {orb:.2f} deg",
                         team=effect_team,
                         weight=weight * 0.8,
+                        lords=tuple(chart.lord_numbers(base_name)),
                         note=(_cycle_note(chart, body) + " Ax-Vx/EQD-EQA: supplementary angle set (p.65-67).").strip(),
                         low_confidence=_is_cyclic(chart, body),
                     ))
@@ -511,6 +516,7 @@ def outer_planet_angle_conjunctions(chart: Chart) -> list[Factor]:
                     ),
                     team=effect,
                     weight=2.25,
+                    lords=tuple(chart.lord_numbers(planet)),
                     note=_cycle_note(chart, body),
                     low_confidence=_is_cyclic(chart, body),
                 ))
@@ -540,7 +546,7 @@ def neptune_angle_aspects(chart: Chart) -> list[Factor]:
                 factors.append(Factor(
                     category="Neptune-Angle",
                     description=f"{body} conjunct {name} (status-independent)",
-                    team=baseline, weight=2.25,
+                    team=baseline, weight=2.25, lords=tuple(chart.lord_numbers("Neptune")),
                 ))
         for axis_name, p1 in (("Asc-Dsc", chart.asc), ("Mc-Ic", chart.mc)):
             rel = axis_relationship(lon, retro, p1, ANGLE_ORB)
@@ -548,7 +554,7 @@ def neptune_angle_aspects(chart: Chart) -> list[Factor]:
                 factors.append(Factor(
                     category="Neptune-Angle",
                     description=f"{body} {rel[0]} {axis_name} (status-independent)",
-                    team=baseline, weight=1.75,
+                    team=baseline, weight=1.75, lords=tuple(chart.lord_numbers("Neptune")),
                 ))
     return factors
 
@@ -577,6 +583,7 @@ def asc_mc_midpoint_factors(chart: Chart) -> list[Factor]:
                 description=f"{body} ({status.lower()}) on the Asc-Mc midpoint within {d:.2f} deg",
                 team=_flip_if_reverse(DOG, status),
                 weight=1.5,
+                lords=tuple(chart.lord_numbers(planet)),
                 note=_cycle_note(chart, body),
                 low_confidence=_is_cyclic(chart, body),
             ))
@@ -683,6 +690,7 @@ def planet_pof_aspects(chart: Chart) -> list[Factor]:
                     ),
                     team=effect_team,
                     weight=1.75,
+                    lords=tuple(chart.lord_numbers(planet)),
                     note=_cycle_note(chart, body),
                     low_confidence=_is_cyclic(chart, body) or pof_final_status_is_cyclic(chart, antiscia=antiscia),
                 ))
@@ -760,6 +768,7 @@ def apof_planet_conjunctions(chart: Chart) -> list[Factor]:
             ),
             team=team if combined == NORMAL else opposite(team),
             weight=2.25 if key_lord else 1.25,
+            lords=tuple(lords),
             note=_cycle_note(chart, planet),
             low_confidence=_is_cyclic(chart, planet) or apof_cyclic,
         ))
@@ -829,6 +838,7 @@ def node_aspects(chart: Chart) -> list[Factor]:
                     description=f"{base_name} ({status.lower()}) conjunct {node_name} within {d:.2f} deg",
                     team=_flip_if_reverse(baseline, status),
                     weight=1.25,
+                    lords=tuple(chart.lord_numbers(base_name)),
                     note=_cycle_note(chart, base_name),
                     low_confidence=cyclic,
                 ))
@@ -840,6 +850,7 @@ def node_aspects(chart: Chart) -> list[Factor]:
                 description=f"{base_name} ({status.lower()}) square Node axis within {d_sq:.2f} deg",
                 team=_flip_if_reverse(opposite(team), status),
                 weight=1.0,
+                lords=tuple(chart.lord_numbers(base_name)),
                 note=_cycle_note(chart, base_name),
                 low_confidence=cyclic,
             ))
