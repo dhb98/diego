@@ -256,6 +256,35 @@ def test_moon_angle_counts_non_conjunction_aspects():
     assert f.team == "FAV"
 
 
+def test_intercepted_sign_grants_lordship():
+    # p.28: Venus rules Libra; Libra is not on the 8th cusp but falls
+    # wholly inside the 8th house, so "it is still in the 8th house and
+    # L8 as well" -- making Venus a dog planet here.
+    # 8th cusp at 5 Libra would put Libra ON the cusp; instead put the
+    # 8th cusp at 25 Virgo (175) and the 9th at 215, so Libra (180-210)
+    # is fully enclosed and touches neither cusp.
+    chart = parse_chart(
+        "House 1: 25°00' Pis  (355.0), Neptune\n"
+        "House 2: 25°00' Ari  (25.0), Mars\n"
+        "House 3: 25°00' Tau  (55.0), Eris\n"
+        "House 4: 25°00' Gem  (85.0), Mercury\n"
+        "House 5: 25°00' Can  (115.0), Moon\n"
+        "House 6: 25°00' Leo  (145.0), Sun\n"
+        "House 7: 25°00' Vir  (175.0), Ceres\n"
+        "House 8: 25°00' Vir  (175.0), Ceres\n"
+        "House 9: 05°00' Sco  (215.0), Pluto\n"
+        "House 10: 25°00' Sco  (235.0), Pluto\n"
+        "House 11: 25°00' Sag  (265.0), Jupiter\n"
+        "House 12: 25°00' Cap  (295.0), Saturn\n"
+    )
+    assert 8 in chart.intercepted_lordships("Venus")
+    assert 8 in chart.lord_numbers("Venus")
+    assert chart.team_of("Venus") == "DOG"
+
+    # A sign merely sitting on a cusp is not intercepted.
+    assert 7 not in chart.intercepted_lordships("Ceres")
+
+
 def test_analyze_fixture_end_to_end():
     with open(FIXTURE) as f:
         result = analyze(f.read())

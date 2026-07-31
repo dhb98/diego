@@ -104,8 +104,36 @@ class Chart:
     def ic(self) -> float:
         return (self.houses[10].longitude + 180.0) % 360.0
 
+    def intercepted_lordships(self, planet: str) -> list[int]:
+        """Houses this planet co-rules because the sign it rules falls
+        wholly INSIDE the house without touching either cusp.
+
+        p.28: "Though Libra (the sign Venus rules) is not on the 8th cusp
+        (this is called an intercepted sign), it is still in the 8th house
+        and L8 as well; we should note it still belongs to the dog too."
+        """
+        from .constants import PLANET_RULES, SIGNS
+        ruled = PLANET_RULES.get(planet)
+        if ruled is None or len(self.houses) < 12:
+            return []
+        sign_start = SIGNS.index(ruled) * 30.0
+
+        found = []
+        for h, cusp in self.houses.items():
+            if h in (3, 9):
+                continue
+            nxt = self.houses.get(h % 12 + 1)
+            if nxt is None:
+                continue
+            span = (nxt.longitude - cusp.longitude) % 360.0
+            offset = (sign_start - cusp.longitude) % 360.0
+            if offset > 0 and offset + 30.0 < span:
+                found.append(h)
+        return found
+
     def lord_numbers(self, planet: str) -> list[int]:
-        return sorted(h for h, c in self.houses.items() if c.ruler == planet and h not in (3, 9))
+        cusp_lords = {h for h, c in self.houses.items() if c.ruler == planet and h not in (3, 9)}
+        return sorted(cusp_lords | set(self.intercepted_lordships(planet)))
 
     def team_of(self, planet: str) -> str | None:
         """Which side a body plays for.
