@@ -71,4 +71,15 @@ def summarize(factors: list[Factor]) -> Verdict:
         else:
             confidence = "lopsided -- the kind of setup the book calls a strong bet"
 
+        # A lopsided *score* built from almost no scoreable factors is not
+        # the same as a chart stacked with evidence -- say so, otherwise
+        # "1 factor found, 7 excluded" reads identically to a chart with
+        # 12 clean factors pointing the same way.
+        scored_count = fav_count + dog_count
+        if excluded and scored_count and excluded >= 2 * scored_count:
+            confidence += (
+                f"; but thin evidence -- only {scored_count} of {scored_count + excluded} "
+                "factors resolved cleanly, the rest sit in an unresolved dispositor loop"
+            )
+
     return Verdict(fav_score, dog_score, fav_count, dog_count, lean, confidence, excluded)
