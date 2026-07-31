@@ -198,6 +198,44 @@ def test_dual_rulership_resolves_to_strongest_lord():
     assert chart.team_of("Ceres") == "FAV"
 
 
+def test_generic_planet_square_angle_helps_own_team():
+    # The book's Cubs/Padres chart (p.59-60): L7 Mercury square the MC.
+    # Normal Mercury "must really help that team" (the dog); it only
+    # HURTS the dog because Mercury is Rx and therefore reverse. A square
+    # must not flip the side by itself -- only status does.
+    from stellar_wheelhouse.aspects import planet_axis_aspects
+
+    def _merc_square_mc(retrograde):
+        # MC at 204.87, so Mercury's square point is 114.87. Approach it
+        # from whichever side actually applies: a direct Mercury from
+        # below, an Rx Mercury from above (which is why the book's own
+        # example only counts once Mercury turns Rx). Sun in its own sign
+        # anchors the dispositor chain as normal either way.
+        lon = 115.82 if retrograde else 113.92
+        text = (
+            "Favorite = Venus\nUnderdog = Mercury\n"
+            "House 1: 23°39' Sag  (263.64), Jupiter\n"
+            "House 7: 23°39' Gem  (83.64), Mercury\n"
+            "House 10: 24°52' Lib  (204.87), Venus\n"
+            "House 4: 24°52' Ari  (24.87), Mars\n"
+            f"Merc{' Rx' if retrograde else ''}: 00°00' Can  ({lon})\n"
+            "Moon: 15°53' Leo  (135.89)\n"
+            "Sun: 11°13' Leo  (131.23)\n"
+        )
+        chart = parse_chart(text)
+        return [f for f in planet_axis_aspects(chart)
+                if f.category == "Planet-Axis" and "Mc-Ic" in f.description
+                and f.description.startswith("Mercury")]
+
+    direct = _merc_square_mc(False)
+    assert len(direct) == 1 and "square" in direct[0].description
+    assert direct[0].team == "DOG", "normal L7 Mercury square MC helps the dog"
+
+    retro = _merc_square_mc(True)
+    assert len(retro) == 1
+    assert retro[0].team == "FAV", "reverse (Rx) L7 Mercury square MC hurts the dog"
+
+
 def test_analyze_fixture_end_to_end():
     with open(FIXTURE) as f:
         result = analyze(f.read())

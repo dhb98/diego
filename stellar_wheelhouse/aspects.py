@@ -287,6 +287,17 @@ def planet_cusp_aspects(chart: Chart) -> list[Factor]:
 # "(unless L#)" bookkeeping: when the aspecting planet itself holds that
 # Lord number, the book says to fall back to the plain team-based
 # baseline instead of the planet's stated bias.
+#
+# GENERIC BASELINE: for any planet without a special-case entry below, a
+# normal planet aspecting an angle helps ITS OWN team -- for squares just
+# as much as for trines. The aspect type does not flip the side, exactly
+# as it doesn't for Moon-planet aspects ("the type of aspect is
+# irrelevant", p.25). Both worked examples in the excerpt confirm it:
+# normal L7 Mercury square the MC "must really help that team [the dog]"
+# and only hurts the dog once Rx makes it reverse (p.59-60), and normal
+# L1 Jupiter square the Ax-Vx is "a huge boost" for the favorite (p.65).
+# Only Mars/Saturn/Uranus/Pluto carry an inherent fav/dog bias that
+# overrides the planet's own side.
 # ---------------------------------------------------------------------
 
 # name -> {(axis, kind): (baseline_team, unless_lord_or_None)}
@@ -359,12 +370,13 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
             special = SPECIAL_AXIS_RULES.get(base_name, {}).get((axis_name, kind))
             if special:
                 baseline, unless_lord = special
-                if unless_lord is not None and unless_lord in chart.lord_numbers(base_name):
-                    result_team = team if kind == "trine" else opposite(team)
-                else:
-                    result_team = baseline
+                # "(unless L7)" etc: the planet's inherent bias yields to
+                # its own side when it holds that Lord.
+                result_team = team if (
+                    unless_lord is not None and unless_lord in chart.lord_numbers(base_name)
+                ) else baseline
             else:
-                result_team = team if kind == "trine" else opposite(team)
+                result_team = team
             effect_team = _flip_if_reverse(result_team, status)
             factors.append(Factor(
                 category="Planet-Axis",
@@ -382,7 +394,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
             if not rel:
                 continue
             kind, orb = rel
-            result_team = team if kind in ("trine", "conjunct_p1", "conjunct_p2") else opposite(team)
+            result_team = team  # generic baseline: aspect type does not flip the side
             effect_team = _flip_if_reverse(result_team, status)
             factors.append(Factor(
                 category="Planet-Axis",
@@ -399,7 +411,7 @@ def planet_axis_aspects(chart: Chart) -> list[Factor]:
                 rel = axis_relationship(ra_val, retro, eqd, ANGLE_ORB)
                 if rel:
                     kind, orb = rel
-                    result_team = team if kind in ("trine", "conjunct_p1", "conjunct_p2") else opposite(team)
+                    result_team = team  # generic baseline: aspect type does not flip the side
                     effect_team = _flip_if_reverse(result_team, status)
                     factors.append(Factor(
                         category="Planet-Axis",
