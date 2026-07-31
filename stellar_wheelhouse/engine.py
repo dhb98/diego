@@ -71,7 +71,15 @@ def _unscored_notes(chart: Chart) -> list[str]:
             )
             notes.append(f"{flag} -- {explanation}")
 
-    from .aspects import unruled_pof_casts
+    from .aspects import unruled_pof_casts, moon_extra_axis_contacts
+    for contact in moon_extra_axis_contacts(chart):
+        notes.append(
+            f"{contact} -- the Moon-to-angle rule names only ASC/DSC/MC/IC (p.19), "
+            "but the book also calls the supplementary axes 'treated identically to "
+            "the Asc-Dsc' (p.65). The excerpt never settles which applies to the "
+            "Moon, so this is shown rather than scored either way."
+        )
+
     for cast in unruled_pof_casts(chart):
         notes.append(
             f"{cast} -- the excerpt states planet-to-POF rules only for Mars, "

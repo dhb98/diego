@@ -595,6 +595,36 @@ def planet_pof_aspects(chart: Chart) -> list[Factor]:
     return factors
 
 
+def moon_extra_axis_contacts(chart: Chart) -> list[str]:
+    """Moon within orb of the Ax-Vx or EQD-EQA axis.
+
+    Deliberately NOT scored. The book's Moon-to-angle rule names only
+    "the ASC, DSC, MC or IC" (p.19), yet it also says the supplementary
+    axes are "treated identically to the Asc-Dsc" (p.65) -- which would
+    pull the Moon in. The excerpt never resolves which reading wins and
+    never shows a worked Moon/Ax-Vx example, so these are surfaced for
+    the reader to judge rather than guessed at either way.
+    """
+    found = []
+    moon_lon = chart.lon("Moon")
+    if moon_lon is None:
+        return found
+
+    ax = chart.extra_angles.get("AX")
+    if ax is not None:
+        rel = axis_relationship(moon_lon, False, ax, ANGLE_ORB)
+        if rel:
+            found.append(f"Moon {rel[0].replace('_', ' ')} Ax-Vx within {rel[1]:.2f} deg")
+
+    eqd = chart.ra.get("EQD")
+    moon_ra = chart.ra.get("Moon")
+    if eqd is not None and moon_ra is not None:
+        rel = axis_relationship(moon_ra, False, eqd, ANGLE_ORB)
+        if rel:
+            found.append(f"Moon {rel[0].replace('_', ' ')} EQD-EQA (RA) within {rel[1]:.2f} deg")
+    return found
+
+
 def unruled_pof_casts(chart: Chart) -> list[str]:
     """Planet->POF aspects the excerpt gives no rule for, so the report
     can name them instead of silently dropping them."""
