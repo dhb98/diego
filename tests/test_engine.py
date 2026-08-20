@@ -296,6 +296,22 @@ def test_analyze_fixture_end_to_end():
     assert len(result.unscored_notes) == 2  # Capulus-Algol + Degree Alert, flagged but not scored
 
 
+def test_in_game_timing_spans_the_moon_travel_window():
+    from stellar_wheelhouse.geometry import in_game_timing
+    from stellar_wheelhouse.constants import MOON_TRAVEL_ORB
+    # 0 deg of travel = exact at the start; the full 5-deg window = the end.
+    assert in_game_timing(0.0) == 0.0
+    assert in_game_timing(MOON_TRAVEL_ORB / 2) == 50.0
+    assert in_game_timing(MOON_TRAVEL_ORB) == 100.0
+    assert in_game_timing(1.0 / 3) == 6.7  # rounded to one decimal
+    # Every timed factor in the fixture must fall inside the game.
+    with open(FIXTURE) as f:
+        result = analyze(f.read())
+    timed = [f for f in result.factors if f.timing_pct is not None]
+    assert timed, "fixture chart should produce at least one timed Moon factor"
+    assert all(0.0 <= f.timing_pct <= 100.0 for f in timed)
+
+
 if __name__ == "__main__":
     import traceback
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]

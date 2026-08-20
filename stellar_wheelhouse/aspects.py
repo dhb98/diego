@@ -24,7 +24,10 @@ from .chart_parser import Chart
 from .status_engine import (
     body_status, body_status_is_cyclic, pof_final_status, pof_final_status_is_cyclic, combine,
 )
-from .geometry import best_moon_travel_aspect, applying_delta, axis_relationship, forward_delta
+from .geometry import (
+    best_moon_travel_aspect, applying_delta, axis_relationship, forward_delta,
+    in_game_timing,
+)
 
 
 def _cycle_note(chart: Chart, *names: str) -> str:
@@ -102,7 +105,7 @@ def moon_body_aspects(chart: Chart) -> list[Factor]:
             lords=tuple(lords),
             note=_cycle_note(chart, "Moon", target),
             low_confidence=_is_cyclic(chart, "Moon", target),
-            timing_pct=round(fwd / MOON_TRAVEL_ORB * 100, 1),
+            timing_pct=in_game_timing(fwd),
         ))
     return factors
 
@@ -142,7 +145,7 @@ def moon_pof_aspects(chart: Chart) -> list[Factor]:
             ),
             team=effect_team,
             weight=2.75 if antiscia else 2.5,
-            timing_pct=round(fwd / MOON_TRAVEL_ORB * 100, 1),
+            timing_pct=in_game_timing(fwd),
             note=_cycle_note(chart, "Moon") if cyclic else "",
             low_confidence=cyclic,
         ))
@@ -170,7 +173,7 @@ def moon_node_square(chart: Chart) -> Factor | None:
         description=f"Moon square Node axis [{moon_status.lower()} Moon]",
         team=effect_team,
         weight=1.0,
-        timing_pct=round(hit[1] / MOON_TRAVEL_ORB * 100, 1),
+        timing_pct=in_game_timing(hit[1]),
         note=_cycle_note(chart, "Moon"),
         low_confidence=_is_cyclic(chart, "Moon"),
     )

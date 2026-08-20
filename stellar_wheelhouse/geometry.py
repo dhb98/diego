@@ -1,7 +1,7 @@
 """Small angle-arithmetic helpers shared by aspects.py."""
 from __future__ import annotations
 
-from .constants import ASPECT_ANGLES
+from .constants import ASPECT_ANGLES, MOON_TRAVEL_ORB
 
 
 def norm360(x: float) -> float:
@@ -42,6 +42,18 @@ def best_moon_travel_aspect(moon_lon: float, target_lon: float, max_orb: float):
             if fwd <= max_orb and (best is None or fwd < best[1]):
                 best = (aspect_name, fwd)
     return best
+
+
+def in_game_timing(forward_degrees: float, window: float = MOON_TRAVEL_ORB) -> float:
+    """In-game timing ("IT") of a Moon factor, as a percentage of the game.
+
+    The book treats the Moon's 5-degree travel window as spanning the whole
+    game (p.16-17), so an aspect that perfects after `forward_degrees` of
+    forward travel lands `forward_degrees / window` of the way through it:
+    0.0 means exact at the opening whistle, 100.0 at the very end. Rounded
+    to one decimal, matching how the report prints it.
+    """
+    return round(forward_degrees / window * 100.0, 1)
 
 
 def is_applying_within(body_lon: float, target_lon: float, retrograde: bool, orb: float) -> float | None:
